@@ -7,5 +7,3 @@ df.drop(labels=["Vector", "Coordinate"], axis=1, inplace=True)
 df.rename(columns={"Ref_Date": "YEAR", "Value": "VALUE"}, inplace=True)
 
 df.to_csv("formatted.csv", index=False)
-
-print(df)
