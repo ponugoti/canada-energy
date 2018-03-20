@@ -2,7 +2,7 @@ import pandas as pd
 from collections import defaultdict
 import json
 
-df = pd.read_csv("dataset.csv", na_values=['x', '..'])
+df = pd.read_csv("dataset.csv", na_values=['x', '..', '0.0'])
 df.dropna(how='any', inplace=True)
 
 # remove irrelevant columns from dataset
