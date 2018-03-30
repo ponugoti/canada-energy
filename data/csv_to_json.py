@@ -2,26 +2,45 @@ import pandas as pd
 from collections import defaultdict
 import json
 
-df = pd.read_csv("dataset.csv", na_values=['x', '..', '0.0'])
-df.dropna(how='any', inplace=True)
+def clean_up_csv():
+    df = pd.read_csv("dataset.csv", na_values=['x', '..', '0.0'])
+    df.dropna(how='any', inplace=True)
 
-# remove irrelevant columns from dataset
-df.drop(labels=["Vector", "Coordinate"], axis=1, inplace=True)
-df.reset_index(drop=True, inplace=True)
+    df.drop(labels=["Vector", "Coordinate"], axis=1, inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    df.rename(columns={"Ref_Date": "YEAR", "Value": "VALUE"}, inplace=True)
+    df.replace([", primary energy", ", secondary energy"],"", regex=True, inplace=True)
 
-# normalize headers
-df.rename(columns={"Ref_Date": "YEAR", "Value": "VALUE"}, inplace=True)
+    return df
 
-# remove 'primary energy' and 'secondary energy' descriptors
-df.replace([", primary energy", ", secondary energy"], "", regex=True, inplace=True)
+def export_location_based_json(df):
+    # Make a Json object of all the data based on GEO
+    data = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
-df.to_csv("formatted.csv", index=False)
+    for r in df.itertuples():
+        data[r.GEO][r.FUEL][r.SUPPLY][r.YEAR] = r.VALUE
 
-# Make a Json object of all the data based on GEO
-data = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    with open("dataset.json", mode='w') as f:
+        f.write(json.dumps(data, indent=2))
 
-for r in df.itertuples():
-    data[r.GEO][r.FUEL][r.SUPPLY][r.YEAR] = r.VALUE
+def export_year_based_json(df):
+    # Make a Json object of all the data based on GEO
+    data = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
-with open("dataset.json", mode='w') as f:
-    f.write(json.dumps(data, indent=2))
+    for r in df.itertuples():
+        data[r.GEO][r.FUEL][r.SUPPLY][r.YEAR] = r.VALUE
+
+    with open("dataset.json", mode='w') as f:
+        f.write(json.dumps(data, indent=2))
+
+if __name__ == '__main__':
+    df = clean_up_csv()
+
+    df.drop(df[df.YEAR != 1995].index, inplace=True)
+    df.drop(df[df.GEO != "Canada"].index, inplace=True)
+    df.drop(labels=["GEO", "YEAR"], axis=1, inplace=True)
+
+    df.to_csv("formatted.csv", index=False)
+    df.to_csv("hyphened.csv", index=False, sep='-')
+
+    # export_location_based_json(df)
