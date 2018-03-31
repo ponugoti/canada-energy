@@ -36,11 +36,19 @@ def export_year_based_json(df):
 if __name__ == '__main__':
     df = clean_up_csv()
 
-    df.drop(df[df.YEAR != 1995].index, inplace=True)
-    df.drop(df[df.GEO != "Canada"].index, inplace=True)
-    df.drop(labels=["GEO", "YEAR"], axis=1, inplace=True)
+    # df.drop(df[df.YEAR != 1995].index, inplace=True)
+    # df.drop(df[df.GEO != "Canada"].index, inplace=True)
+    # df.drop(labels=["GEO", "YEAR"], axis=1, inplace=True)
 
+    values = [r.VALUE for r in df.itertuples()]
+    df.drop(labels=["VALUE"], axis=1, inplace=True)
     df.to_csv("formatted.csv", index=False)
     df.to_csv("hyphened.csv", index=False, sep='-')
+
+    with open("hyphened.csv", 'r') as f:
+        lines = ["".join([line.strip(), ",", str(val), "\n"]) for line, val in zip(f.readlines(), values)]
+
+    with open("hyphened.csv", 'w') as f:
+        f.writelines(lines)
 
     # export_location_based_json(df)
