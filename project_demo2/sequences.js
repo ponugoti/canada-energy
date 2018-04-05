@@ -23,6 +23,7 @@ var colors = function(str) {
     color += ('00' + value.toString(16)).substr(-2);
   }
   return color;
+
 }
 
 // Total size of all segments; we set this later, after loading the data.
@@ -30,6 +31,9 @@ var totalSize = 0;
 
 // JSON object of all the data encoded in (name, children) heirarchy
 var json = null;
+
+var year = 1995;
+var province = null;
 
 var vis = d3.select("#chart").append("svg:svg")
   .attr("width", width)
@@ -52,25 +56,31 @@ d3.text("visit-sequences.csv", function(text) {
     json = buildHierarchy(csv);
     // createVisualization(json);
 
-    // console.log(json.children);
-    let year = 2015;
-
-    for ()
-
-    createVisualization(yearData);
+    createVisualization(yearData(1995));
 });
 
-function yearData(year) {
-    for (year_index in json.children) {
-        if (json.children[year_index].name == year) {
-            return json.children[year_index];
+function yearData() {
+    for (year_idx in json.children) {
+        if (json.children[year_idx].name == year) {
+            return json.children[year_idx];
         }
     }
-    return null;
 };
 
-function provinceData(province) {
-
+function provinceData() {
+    if (province) {
+        var years = json.children
+        for (year_idx in years) {
+            if (years[year_idx].name == year) {
+                var provinces = years[year_idx.children;
+                for (province_idx in provinces) {
+                    if (provinces[province_idx] == province) {
+                        return provinces[province_idx];
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Main function to draw and set up the visualization, once we have the data.
