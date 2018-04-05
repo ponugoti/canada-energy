@@ -1,42 +1,35 @@
 // Dimensions of sunburst.
-var width = 750;
-var height = 600;
+var width = 1920;
+var height = 900;
 var radius = Math.min(width, height) / 2;
 
 // Breadcrumb dimensions: width, height, spacing, width of tip/tail.
 var b = {
-  w: 75,
-  h: 30,
-  s: 3,
+  w: 300,
+  h: 50,
+  s: 2,
   t: 10
 };
 
-// Mapping of step names to colors.
-// var colors = {
-//   "Canada": "#5687d1",
-//   "product": "#7b615c",
-//   "search": "#de783b",
-//   "account": "#6ab975",
-//   "other": "#a173d1",
-//   "end": "#bbbbbb"
-// };
+// Return a color for a given string to seperate different entities in a visualization
 var colors = function(str) {
   var hash = 0;
   for (var i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  var colour = '#';
+  var color = '#';
   for (var i = 0; i < 3; i++) {
     var value = (hash >> (i * 8)) & 0xFF;
-    colour += ('00' + value.toString(16)).substr(-2);
+    color += ('00' + value.toString(16)).substr(-2);
   }
-  return colour;
+  return color;
 }
-
-
 
 // Total size of all segments; we set this later, after loading the data.
 var totalSize = 0;
+
+// JSON object of all the data encoded in (name, children) heirarchy
+var json = null;
 
 var vis = d3.select("#chart").append("svg:svg")
   .attr("width", width)
@@ -45,111 +38,100 @@ var vis = d3.select("#chart").append("svg:svg")
   .attr("id", "container")
   .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-var partition = d3.partition()
-  .size([2 * Math.PI, radius * radius]);
+var partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
-var arc = d3.arc()
-  .startAngle(function(d) {
-    return d.x0;
-  })
-  .endAngle(function(d) {
-    return d.x1;
-  })
-  .innerRadius(function(d) {
-    return Math.sqrt(d.y0);
-  })
-  .outerRadius(function(d) {
-    return Math.sqrt(d.y1);
-  });
+var arc = d3.arc().startAngle(d => { return d.x0; })
+                  .endAngle(d => { return d.x1; })
+                  .innerRadius(d => { return Math.sqrt(d.y0); })
+                  .outerRadius(d => { return Math.sqrt(d.y1); });
 
 // Use d3.text and d3.csvParseRows so that we do not need to have a header
 // row, and can receive the csv as an array of arrays.
 d3.text("visit-sequences.csv", function(text) {
-  var csv = d3.csvParseRows(text);
-  var json = buildHierarchy(csv);
-  console.log(json)
-  createVisualization(json);
-  // console.log("hello");
+    var csv = d3.csvParseRows(text);
+    json = buildHierarchy(csv);
+    // createVisualization(json);
+
+    // console.log(json.children);
+    let year = 2015;
+
+    for ()
+
+    createVisualization(yearData);
 });
+
+function yearData(year) {
+    for (year_index in json.children) {
+        if (json.children[year_index].name == year) {
+            return json.children[year_index];
+        }
+    }
+    return null;
+};
+
+function provinceData(province) {
+
+}
 
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(json) {
-  // Basic setup of page elements.
-  initializeBreadcrumbTrail();
-  drawLegend();
-  d3.select("#togglelegend").on("click", toggleLegend);
+    // Basic setup of page elements.
+    initializeBreadcrumbTrail();
+    // drawLegend();
+    // d3.select("#togglelegend").on("click", toggleLegend);
 
-  // Bounding circle underneath the sunburst, to make it easier to detect
-  // when the mouse leaves the parent g.
-  vis.append("svg:circle")
-    .attr("r", radius)
-    .style("opacity", 0);
+    // Bounding circle underneath the sunburst, to make it easier to detect
+    // when the mouse leaves the parent g.
+    vis.append("svg:circle").attr("r", radius)
+                          .style("opacity", 0);
 
-  // Turn the data into a d3 hierarchy and calculate the sums.
-  var root = d3.hierarchy(json)
-    .sum(function(d) {
-      return d.size;
-    })
-    .sort(function(a, b) {
-      return b.value - a.value;
+    // Turn the data into a d3 hierarchy and calculate the sums.
+    var root = d3.hierarchy(json).sum(d => { return d.size; })
+                               .sort(function(a, b) { return b.value - a.value; });
+
+    // For efficiency, filter nodes to keep only those large enough to see.
+    var nodes = partition(root).descendants().filter(d => {
+        return (d.x1 - d.x0 > 0.005); // 0.005 radians = 0.29 degrees
     });
 
-  // For efficiency, filter nodes to keep only those large enough to see.
-  var nodes = partition(root).descendants()
-    .filter(function(d) {
-      return (d.x1 - d.x0 > 0.005); // 0.005 radians = 0.29 degrees
-    });
-
-  var path = vis.data([json]).selectAll("path")
-    .data(nodes)
-    .enter().append("svg:path")
-    .attr("display", function(d) {
-      return d.depth ? null : "none";
-    })
-    .attr("d", arc)
-    .attr("fill-rule", "evenodd")
-    .style("fill", function(d) {
-      return colors(d.data.name);
-    })
-    .style("opacity", 1)
-    .on("mouseover", mouseover);
+    var path = vis.data([json]).selectAll("path")
+        .data(nodes)
+        .enter().append("svg:path")
+        .attr("display", d => { return d.depth ? null : "none"; })
+        .attr("d", arc)
+        .attr("fill-rule", "evenodd")
+        .style("fill", d => { return colors(d.data.name); })
+        .style("opacity", 1)
+        .on("mouseover", mouseover);
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
 
   // Get total size of the tree = value of root node from partition.
-  totalSize = path.datum().value;
+  // totalSize = path.datum().value;
 };
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
 function mouseover(d) {
+    var percentage = (100 * d.value / totalSize).toPrecision(3);
+    var percentageString = percentage + "%";
+    if (percentage < 0.1) { percentageString = "< 0.1%"; }
 
-  var percentage = (100 * d.value / totalSize).toPrecision(3);
-  var percentageString = percentage + "%";
-  if (percentage < 0.1) {
-    percentageString = "< 0.1%";
-  }
+    d3.select("#percentage").text(percentageString);
 
-  d3.select("#percentage")
-    .text(percentageString);
+    d3.select("#explanation").style("visibility", "");
 
-  d3.select("#explanation")
-    .style("visibility", "");
+    var sequenceArray = d.ancestors().reverse();
+    sequenceArray.shift(); // remove root node from the array
+    updateBreadcrumbs(sequenceArray, percentageString);
 
-  var sequenceArray = d.ancestors().reverse();
-  sequenceArray.shift(); // remove root node from the array
-  updateBreadcrumbs(sequenceArray, percentageString);
+    // Fade all the segments.
+    d3.selectAll("path").style("opacity", 0.3);
 
-  // Fade all the segments.
-  d3.selectAll("path")
-    .style("opacity", 0.3);
-
-  // Then highlight only those that are an ancestor of the current segment.
-  vis.selectAll("path")
-    .filter(function(node) {
-      return (sequenceArray.indexOf(node) >= 0);
-    })
-    .style("opacity", 1);
+    // Then highlight only those that are an ancestor of the current segment.
+    vis.selectAll("path").filter(function(node) {
+        return (sequenceArray.indexOf(node) >= 0);
+    }).style("opacity", 1);
 }
 
 // Restore everything to full opacity when moving off the visualization.
@@ -194,6 +176,11 @@ function breadcrumbPoints(d, i) {
   points.push(b.w + ",0");
   points.push(b.w + b.t + "," + (b.h / 2));
   points.push(b.w + "," + b.h);
+
+  // points.push(d.length + ",0");
+  // points.push(d.length + b.t + "," + (b.h / 2));
+  // points.push(d.length + "," + b.h);
+
   points.push("0," + b.h);
   if (i > 0) { // Leftmost breadcrumb; don't include 6th vertex.
     points.push(b.t + "," + (b.h / 2));
@@ -205,11 +192,8 @@ function breadcrumbPoints(d, i) {
 function updateBreadcrumbs(nodeArray, percentageString) {
 
   // Data join; key function combines name and depth (= position in sequence).
-  var trail = d3.select("#trail")
-    .selectAll("g")
-    .data(nodeArray, function(d) {
-      return d.data.name + d.depth;
-    });
+  var trail = d3.select("#trail").selectAll("g")
+                                 .data(nodeArray, d => { return d.data.name + d.depth; });
 
   // Remove exiting nodes.
   trail.exit().remove();
@@ -217,23 +201,17 @@ function updateBreadcrumbs(nodeArray, percentageString) {
   // Add breadcrumb and label for entering nodes.
   var entering = trail.enter().append("svg:g");
 
-  entering.append("svg:polygon")
-    .attr("points", breadcrumbPoints)
-    .style("fill", function(d) {
-      return colors[d.data.name];
-    });
+  entering.append("svg:polygon").attr("points", breadcrumbPoints)
+                                .style("fill", d => { return colors[d.data.name]; });
 
-  entering.append("svg:text")
-    .attr("x", (b.w + b.t) / 2)
-    .attr("y", b.h / 2)
-    .attr("dy", "0.35em")
-    .attr("text-anchor", "middle")
-    .text(function(d) {
-      return d.data.name;
-    });
+  entering.append("svg:text").attr("x", (b.w + b.t) / 2)
+                             .attr("y", b.h / 2)
+                             .attr("dy", "0.35em")
+                             .attr("text-anchor", "middle")
+                             .text(d => { return d.data.name; });
 
   // Merge enter and update selections; set position for all nodes.
-  entering.merge(trail).attr("transform", function(d, i) {
+  entering.merge(trail).attr("transform", (d, i) => {
     return "translate(" + i * (b.w + b.s) + ", 0)";
   });
 
@@ -248,7 +226,6 @@ function updateBreadcrumbs(nodeArray, percentageString) {
   // Make the breadcrumb trail visible, if it's hidden.
   d3.select("#trail")
     .style("visibility", "");
-
 }
 
 function drawLegend() {
@@ -277,7 +254,7 @@ function drawLegend() {
     .attr("ry", li.r)
     .attr("width", li.w)
     .attr("height", li.h)
-    .style("fill", function(d) {
+    .style("fill", d => {
       return d.value;
     });
 
@@ -286,19 +263,19 @@ function drawLegend() {
     .attr("y", li.h / 2)
     .attr("dy", "0.35em")
     .attr("text-anchor", "middle")
-    .text(function(d) {
+    .text(d => {
       return d.key;
     });
 }
 
-function toggleLegend() {
-  var legend = d3.select("#legend");
-  if (legend.style("visibility") == "hidden") {
-    legend.style("visibility", "");
-  } else {
-    legend.style("visibility", "hidden");
-  }
-}
+// function toggleLegend() {
+//   var legend = d3.select("#legend");
+//   if (legend.style("visibility") == "hidden") {
+//     legend.style("visibility", "");
+//   } else {
+//     legend.style("visibility", "hidden");
+//   }
+// }
 
 // Take a 2-column CSV and transform it into a hierarchical structure suitable
 // for a partition layout. The first column is a sequence of step names, from
@@ -350,6 +327,5 @@ function buildHierarchy(csv) {
       }
     }
   }
-  console.log(root);
   return root;
 };

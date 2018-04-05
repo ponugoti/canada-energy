@@ -9,7 +9,13 @@ def clean_up_csv():
     df.drop(labels=["Vector", "Coordinate"], axis=1, inplace=True)
     df.reset_index(drop=True, inplace=True)
     df.rename(columns={"Ref_Date": "YEAR", "Value": "VALUE"}, inplace=True)
-    df.replace([", primary energy", ", secondary energy"],"", regex=True, inplace=True)
+    # df.replace([", primary energy", ", secondary energy", "Total "],"", regex=True, inplace=True)
+
+    df.replace(to_replace={'FUEL':{', primary energy': '',
+                                   ', secondary energy': '',
+                                   'Total ': '',
+                                   ' (kilotonnes)': ''}}, regex=True, inplace=True)
+
 
     return df
 
@@ -46,7 +52,9 @@ if __name__ == '__main__':
     df.to_csv("hyphened.csv", index=False, sep='-')
 
     with open("hyphened.csv", 'r') as f:
-        lines = ["".join([line.strip(), ",", str(val), "\n"]) for line, val in zip(f.readlines(), values)]
+        lines = ["".join([f.readline().strip(), "-VALUE", "\n"])]
+        for line, val in zip(f.readlines(), values):
+            lines.append("".join([line.strip(), ",", str(val), "\n"]))
 
     with open("hyphened.csv", 'w') as f:
         f.writelines(lines)
