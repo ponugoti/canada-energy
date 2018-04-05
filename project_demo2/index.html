@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <title>Energy Consumption in Canada</title>
     <script src="https://d3js.org/d3.v4.min.js"></script>
-    <script src="d3.slider.js"></script>
     <link rel="stylesheet" type="text/css"
       href="https://fonts.googleapis.com/css?family=Open+Sans:400,600">
     <link rel="stylesheet" type="text/css" href="sequences.css"/>
@@ -31,11 +30,12 @@
   <!-- note br & hr outside of container now -->
   </br><hr>
 
-<form class="daysAR">
-      <label for="days">Days</label><br />
-      <input type="range" min="1995" max="2016" value="1995" id="days" step="1" oninput="accountsRecievableSlider(value)">
-      <output for="days" id="daysInAR">15</output>
-  </form>
+<form class="yearAR">
+      <label for="year">Year</label><br />
+      <input type="range" min="1995" max="2016" value="1995" id="year" step="1"
+              oninput="sliderChanged(value)">
+      <output for="year" id="yearSlider"></output>
+</form>
 
   </div>
   </body>

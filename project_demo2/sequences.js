@@ -1,7 +1,7 @@
 // Dimensions of sunburst.
 var width = 1920;
 var height = 1000;
-var radius = Math.min(width, height) / 2;
+var radius = Math.min(width, height) / 2.25;
 
 // Breadcrumb dimensions: width, height, spacing, width of tip/tail.
 var b = {
@@ -23,7 +23,6 @@ var colors = function(str) {
         color += ('00' + value.toString(16)).substr(-2);
     }
     return color;
-
 }
 
 // Total size of all segments; we set this later, after loading the data.
@@ -46,15 +45,15 @@ var partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
 var arc = d3.arc().startAngle(d => { return d.x0; })
                   .endAngle(d => { return d.x1; })
-                  .innerRadius(d => { return Math.sqrt(d.y0 * 1.2); })
-                  .outerRadius(d => { return Math.sqrt(d.y1 * 1.2); });
+                  .innerRadius(d => { return Math.sqrt(d.y0); })
+                  .outerRadius(d => { return Math.sqrt(d.y1); });
 
 // Use d3.text and d3.csvParseRows so that we do not need to have a header
 // row, and can receive the csv as an array of arrays.
 d3.text("visit-sequences.csv", function(text) {
     var csv = d3.csvParseRows(text);
     json = buildHierarchy(csv);
-    province = "Ontario";
+    province = "Canada";
     // createVisualization(yearData());
     createVisualization(provinceData());
 });
@@ -83,9 +82,9 @@ function provinceData() {
     }
 };
 
-function accountsRecievableSlider(AR) {
-  document.querySelector('#daysInAR').value = AR;
-  year = document.querySelector('#daysInAR').value
+function sliderChanged(value) {
+  document.querySelector('#yearSlider').value = value;
+  year = document.querySelector('#yearSlider').value
   createVisualization(provinceData())
 }
 
@@ -132,7 +131,7 @@ function createVisualization(json) {
 // Fade all but the current sequence, and show it in the breadcrumb trail.
 function mouseover(d) {
     var value = d.value;
-    var valueString = value + " units";
+    var valueString = value + " kilotonnes";
 
     d3.select("#value").text(valueString);
 
