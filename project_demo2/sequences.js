@@ -25,10 +25,10 @@ var colors = function(str) {
     return color;
 }
 
-var totalSize = 0;
-var json = null;
-var year = 1995;
-var province = null;
+var totalSize = 0,
+    json = null,
+    year = 1995,
+    province = null;
 
 var vis = d3.select("#chart").append("svg:svg")
     .attr("width", width)
@@ -52,6 +52,70 @@ d3.text("visit-sequences.csv", function(text) {
     province = "Canada";
     // createVisualization(yearData());
     createVisualization(provinceData());
+});
+
+var margin = {top: 10, left: 0, bottom: 10, right: 10},
+    width = 100,
+    // width = width - margin.left - margin.right,
+    mapRatio = 5,
+    height = width * mapRatio,
+    mapRatioAdjuster = 2;
+    center = [5, 20];
+
+//Define map projection
+var projection = d3.geoAzimuthalEqualArea()
+                   .rotate([100, -45])
+                   .center(center)
+                   .translate([width, height/2])
+                   .scale(width * [mapRatio + mapRatioAdjuster]);
+
+var path = d3.geoPath().projection(projection);
+
+var svg = d3.select("#viz")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+
+var features = d3.select("#viz")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g");
+
+//Load TopoJSON data
+d3.json("/assets/canada-topojson.json", function(error, can) {
+
+  if (error) return console.error(error);
+
+  var subunits = topojson.feature(can, can.objects.canada);
+
+    //Bind data and create one path per TopoJSON feature
+    features.selectAll("path")
+        .data(topojson.feature(can, can.objects.canada).features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr("fill", "#e8d8c3")
+        .attr("stroke", "#404040")
+        .attr("stroke-width", .45)
+
+    .on("mousemove", function(d) {
+        d3.select("#tooltip")
+            .style("top", (d3.event.pageY) + 20 + "px")
+            .style("left", (d3.event.pageX) + 20 + "px")
+            .select('#province-name-tooltip')
+            .text(d.properties.NAME);
+        // d3.select('#province-name')
+        // .text(d.properties.NAME);
+        d3.select("#tooltip").classed("hidden", false);
+    })
+    .on("mouseout", function() {
+        d3.select("#tooltip").classed("hidden", true);
+    })
+    .on("click", d => {
+        province = d.properties.NAME;
+        createVisualization(provinceData());
+    });
 });
 
 function yearData() {
@@ -90,8 +154,8 @@ function createVisualization(json) {
 
     // Basic setup of page elements.
     initializeBreadcrumbTrail();
-    // drawLegend();
-    // d3.select("#togglelegend").on("click", toggleLegend);
+    drawLegend();
+    d3.select("#togglelegend").on("click", toggleLegend);
 
     // Bounding circle underneath the sunburst, to make it easier to detect
     // when the mouse leaves the parent g.
@@ -117,7 +181,10 @@ function createVisualization(json) {
         .attr("fill-rule", "evenodd")
         .style("fill", d => { return colors(d.data.name); })
         .style("opacity", 1)
-        .on("mouseover", mouseover);
+        .on("mouseover", mouseover)
+        .attr("data-legend", d => {
+            return drawLegend(d.data.name);
+        });
 
     // Add the mouseleave handler to the bounding circle.
     d3.select("#container").on("mouseleave", mouseleave);
@@ -193,10 +260,11 @@ function breadcrumbPoints(d, i) {
 function updateBreadcrumbs(nodeArray, valueString) {
 
     // Data join; key function combines name and depth (= position in sequence).
-    var trail = d3.select("#trail").selectAll("g")
-                                   .data(nodeArray, d => {
-                                        return d.data.name + d.depth;
-                                    });
+    var trail = d3.select("#trail")
+                    .selectAll("g")
+                    .data(nodeArray, d => {
+                        return d.data.name + d.depth;
+                    });
 
     // Remove exiting nodes.
     trail.exit().remove();
@@ -233,10 +301,12 @@ function updateBreadcrumbs(nodeArray, valueString) {
 
 function drawLegend() {
 
+
+
   // Dimensions of legend item: width, height, spacing, radius of rounded rect.
   var li = {
-    w: 75,
-    h: 30,
+    w: 275,
+    h: 10,
     s: 3,
     r: 3
   };
@@ -246,11 +316,11 @@ function drawLegend() {
     .attr("height", d3.keys(colors).length * (li.h + li.s));
 
   var g = legend.selectAll("g")
-    .data(d3.entries(colors))
-    .enter().append("svg:g")
-    .attr("transform", function(d, i) {
-      return "translate(0," + i * (li.h + li.s) + ")";
-    });
+                .data(d3.entries(colors))
+                .enter().append("svg:g")
+                .attr("transform", function(d, i) {
+                    return "translate(0," + i * (li.h + li.s) + ")";
+                });
 
   g.append("svg:rect")
     .attr("rx", li.r)
@@ -271,14 +341,14 @@ function drawLegend() {
     });
 }
 
-// function toggleLegend() {
-//   var legend = d3.select("#legend");
-//   if (legend.style("visibility") == "hidden") {
-//     legend.style("visibility", "");
-//   } else {
-//     legend.style("visibility", "hidden");
-//   }
-// }
+function toggleLegend() {
+  var legend = d3.select("#legend");
+  if (legend.style("visibility") == "hidden") {
+    legend.style("visibility", "");
+  } else {
+    legend.style("visibility", "hidden");
+  }
+}
 
 // Take a 2-column CSV and transform it into a hierarchical structure suitable
 // for a partition layout. The first column is a sequence of step names, from
