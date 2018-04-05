@@ -30,9 +30,12 @@
   <!-- note br & hr outside of container now -->
   </br><hr>
 
-  <div class = "container text-center" >
-            <!-- <h4>Year: <span class = "sliderText">2016</span></h4> -->
-            <input type="range" min="1995" max="2016" step="1" value="2016" id="yearSlider">
+<form class="daysAR">
+      <label for="days">Days</label><br />
+      <input type="range" min="1995" max="2016" value="1995" id="days" step="1" oninput="accountsRecievableSlider(value)">
+      <output for="days" id="daysInAR">15</output>
+  </form>
+
   </div>
   </body>
 </html>

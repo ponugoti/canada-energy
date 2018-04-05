@@ -46,8 +46,8 @@ var partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
 var arc = d3.arc().startAngle(d => { return d.x0; })
                   .endAngle(d => { return d.x1; })
-                  .innerRadius(d => { return Math.sqrt(d.y0); })
-                  .outerRadius(d => { return Math.sqrt(d.y1); });
+                  .innerRadius(d => { return Math.sqrt(d.y0 * 0.8); })
+                  .outerRadius(d => { return Math.sqrt(d.y1 * 1.2); });
 
 // Use d3.text and d3.csvParseRows so that we do not need to have a header
 // row, and can receive the csv as an array of arrays.
@@ -86,6 +86,12 @@ function provinceData() {
         }
     }
 };
+
+function accountsRecievableSlider(AR) {
+  document.querySelector('#daysInAR').value = AR;
+  year = document.querySelector('#daysInAR').value
+  createVisualization(json)
+}
 
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(json) {
