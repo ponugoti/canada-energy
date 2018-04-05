@@ -1,6 +1,6 @@
 // Dimensions of sunburst.
 var width = 1920;
-var height = 900;
+var height = 1000;
 var radius = Math.min(width, height) / 2;
 
 // Breadcrumb dimensions: width, height, spacing, width of tip/tail.
@@ -40,27 +40,23 @@ var vis = d3.select("#chart").append("svg:svg")
     .attr("height", height)
     .append("svg:g")
     .attr("id", "container")
-    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    .attr("transform", "translate(" + width / 1.5 + "," + height / 2 + ")");
 
 var partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
 var arc = d3.arc().startAngle(d => { return d.x0; })
                   .endAngle(d => { return d.x1; })
-                  .innerRadius(d => { return Math.sqrt(d.y0); })
-                  .outerRadius(d => { return Math.sqrt(d.y1); });
+                  .innerRadius(d => { return Math.sqrt(d.y0 * 1.2); })
+                  .outerRadius(d => { return Math.sqrt(d.y1 * 1.2); });
 
 // Use d3.text and d3.csvParseRows so that we do not need to have a header
 // row, and can receive the csv as an array of arrays.
 d3.text("visit-sequences.csv", function(text) {
     var csv = d3.csvParseRows(text);
     json = buildHierarchy(csv);
-    createVisualization(json);
-
-    // console.log(yearData());
+    province = "Ontario";
     // createVisualization(yearData());
-    // province = 'Canada';
-    // console.log(provinceData());
-    // createVisualization(provinceData());
+    createVisualization(provinceData());
 });
 
 function yearData() {
@@ -90,11 +86,13 @@ function provinceData() {
 function accountsRecievableSlider(AR) {
   document.querySelector('#daysInAR').value = AR;
   year = document.querySelector('#daysInAR').value
-  createVisualization(yearData())
+  createVisualization(provinceData())
 }
 
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(json) {
+    d3.selectAll('svg > g > *').remove();
+
     // Basic setup of page elements.
     initializeBreadcrumbTrail();
     // drawLegend();
@@ -122,8 +120,7 @@ function createVisualization(json) {
         .attr("fill-rule", "evenodd")
         .style("fill", d => { return colors(d.data.name); })
         .style("opacity", 1)
-        .on("mouseover", mouseover)
-        .exit().remove();
+        .on("mouseover", mouseover);
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
