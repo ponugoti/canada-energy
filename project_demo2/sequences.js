@@ -46,21 +46,21 @@ var partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
 var arc = d3.arc().startAngle(d => { return d.x0; })
                   .endAngle(d => { return d.x1; })
-                  .innerRadius(d => { return Math.sqrt(d.y0 * 0.8); })
-                  .outerRadius(d => { return Math.sqrt(d.y1 * 1.2); });
+                  .innerRadius(d => { return Math.sqrt(d.y0); })
+                  .outerRadius(d => { return Math.sqrt(d.y1); });
 
 // Use d3.text and d3.csvParseRows so that we do not need to have a header
 // row, and can receive the csv as an array of arrays.
 d3.text("visit-sequences.csv", function(text) {
     var csv = d3.csvParseRows(text);
     json = buildHierarchy(csv);
-    // createVisualization(json);
+    createVisualization(json);
 
     // console.log(yearData());
     // createVisualization(yearData());
-    province = 'Canada';
-    console.log(provinceData());
-    createVisualization(provinceData());
+    // province = 'Canada';
+    // console.log(provinceData());
+    // createVisualization(provinceData());
 });
 
 function yearData() {
@@ -90,7 +90,7 @@ function provinceData() {
 function accountsRecievableSlider(AR) {
   document.querySelector('#daysInAR').value = AR;
   year = document.querySelector('#daysInAR').value
-  createVisualization(json)
+  createVisualization(yearData())
 }
 
 // Main function to draw and set up the visualization, once we have the data.
@@ -103,11 +103,11 @@ function createVisualization(json) {
     // Bounding circle underneath the sunburst, to make it easier to detect
     // when the mouse leaves the parent g.
     vis.append("svg:circle").attr("r", radius)
-                          .style("opacity", 0);
+                            .style("opacity", 0);
 
     // Turn the data into a d3 hierarchy and calculate the sums.
     var root = d3.hierarchy(json).sum(d => { return d.size; })
-                               .sort(function(a, b) { return b.value - a.value; });
+                                 .sort((a, b) => { return b.value - a.value; });
 
     // For efficiency, filter nodes to keep only those large enough to see.
     var nodes = partition(root).descendants().filter(d => {
@@ -122,7 +122,8 @@ function createVisualization(json) {
         .attr("fill-rule", "evenodd")
         .style("fill", d => { return colors(d.data.name); })
         .style("opacity", 1)
-        .on("mouseover", mouseover);
+        .on("mouseover", mouseover)
+        .exit().remove();
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
