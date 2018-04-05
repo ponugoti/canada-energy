@@ -11,7 +11,7 @@ var b = {
     t: 10
 };
 
-// Return a color for a given string to seperate different entities in a visualization
+// Get the hex of a color for a given string
 var colors = function(str) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
@@ -25,12 +25,8 @@ var colors = function(str) {
     return color;
 }
 
-// Total size of all segments; we set this later, after loading the data.
 var totalSize = 0;
-
-// JSON object of all the data encoded in (name, children) heirarchy
 var json = null;
-
 var year = 1995;
 var province = null;
 
@@ -39,7 +35,7 @@ var vis = d3.select("#chart").append("svg:svg")
     .attr("height", height)
     .append("svg:g")
     .attr("id", "container")
-    .attr("transform", "translate(" + width / 1.5 + "," + height / 2 + ")");
+    .attr("transform", "translate(" + width / 1.8 + "," + height / 2 + ")");
 
 var partition = d3.partition().size([2 * Math.PI, radius * radius]);
 
@@ -99,12 +95,14 @@ function createVisualization(json) {
 
     // Bounding circle underneath the sunburst, to make it easier to detect
     // when the mouse leaves the parent g.
-    vis.append("svg:circle").attr("r", radius)
-                            .style("opacity", 0);
+    vis.append("svg:circle")
+        .attr("r", radius)
+        .style("opacity", 0);
 
     // Turn the data into a d3 hierarchy and calculate the sums.
-    var root = d3.hierarchy(json).sum(d => { return d.size; })
-                                 .sort((a, b) => { return b.value - a.value; });
+    var root = d3.hierarchy(json)
+        .sum(d => { return d.size; })
+        .sort((a, b) => { return b.value - a.value; });
 
     // For efficiency, filter nodes to keep only those large enough to see.
     var nodes = partition(root).descendants().filter(d => {
@@ -121,11 +119,8 @@ function createVisualization(json) {
         .style("opacity", 1)
         .on("mouseover", mouseover);
 
-  // Add the mouseleave handler to the bounding circle.
-  d3.select("#container").on("mouseleave", mouseleave);
-
-  // Get total size of the tree = value of root node from partition.
-  // totalSize = path.datum().value;
+    // Add the mouseleave handler to the bounding circle.
+    d3.select("#container").on("mouseleave", mouseleave);
 };
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
@@ -209,8 +204,9 @@ function updateBreadcrumbs(nodeArray, valueString) {
     // Add breadcrumb and label for entering nodes.
     var entering = trail.enter().append("svg:g");
 
-    entering.append("svg:polygon").attr("points", breadcrumbPoints)
-                                  .style("fill", d => { return colors[d.data.name]; });
+    entering.append("svg:polygon")
+        .attr("points", breadcrumbPoints)
+        .style("fill", d => { return colors[d.data.name]; });
 
     entering.append("svg:text").attr("x", (b.w + b.t) / 2)
                                .attr("y", b.h / 2)
@@ -311,7 +307,7 @@ function buildHierarchy(csv) {
                         break;
                     }
                 }
-                // If we don't already have a child node for this branch, create it.
+                // If no child node for this branch, create it.
                 if (!foundChild) {
                     childNode = { "name": nodeName, "children": [] };
                     children.push(childNode);
