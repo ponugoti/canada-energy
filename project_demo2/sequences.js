@@ -58,46 +58,37 @@ d3.text("visit-sequences.csv", function(text) {
   var csv = d3.csvParseRows(text);
   json = buildHierarchy(csv);
   province = "Canada";
-  drawmap();
-  // createVisualization(yearData());
-  // createVisualization(provinceData());
+  createVisualization(provinceData());
 });
 
+var margin = {
+    top: 1,
+    left: 1,
+    bottom: 0,
+    right: 1
+  },
+  width1 = 1000,
+  width1 = width1 - margin.left - margin.right,
+  mapRatio = 1,
+  height1 = width1 * mapRatio,
+  mapRatioAdjuster = .15;
+  center = [5, 20];
+
+var projection = d3.geoAzimuthalEqualArea()
+  .rotate([100, -45])
+  .center(center)
+  .translate([width1 / 2, height1 / 2])
+  .scale(width1 * [mapRatio + mapRatioAdjuster]);
+
+var geoPath = d3.geoPath().projection(projection);
+
+var features = d3.select("#viz")
+  .append("svg")
+  .attr("width", width1)
+  .attr("height", height1)
+  .append("g");
+
 function drawmap() {
-  var margin = {
-      top: 0,
-      left: 10,
-      bottom: 10,
-      right: 0
-    },
-    width1 = 500,
-    // width = width - margin.left - margin.right,
-    mapRatio = 1,
-    height1 = width1 * mapRatio,
-    mapRatioAdjuster = 0.5;
-  center = [10, 10];
-
-  //Define map projection
-  var projection = d3.geoAzimuthalEqualArea()
-    .rotate([100, -45])
-    .center(center)
-    .translate([width1, height1 / 2])
-    .scale(width1 * [mapRatio + mapRatioAdjuster]);
-
-  var path = d3.geoPath().projection(projection);
-
-  var svg = d3.select("#viz")
-    .append("svg")
-    .attr("width", width1)
-    .attr("height", height1)
-    .exit().remove();
-
-  var features = d3.select("#viz")
-    .append("svg")
-    .attr("width", width1)
-    .attr("height", height1)
-    .append("g");
-
   //Load TopoJSON data
   d3.json("canada-topojson.json", function(error, can) {
 
@@ -108,87 +99,40 @@ function drawmap() {
       .data(topojson.feature(can, can.objects.canada).features)
       .enter()
       .append("path")
-      .attr("d", path)
+      .attr("d", geoPath)
       .attr("fill", "#e8d8c3")
       .attr("stroke", "#404040")
       .attr("stroke-width", .45)
 
-    .on("mousemove", function(d) {
+    .on("mouseover", d => {
         d3.select("#tooltip")
+          .transition()
           .style("top", (d3.event.pageY) + 20 + "px")
           .style("left", (d3.event.pageX) + 20 + "px")
           .select('#province-name-tooltip')
-          .text(d.properties.NAME);
-        // d3.select('#province-name')
-        // .text(d.properties.NAME);
+          .text(d.properties.name);
+        d3.select('#province-name')
+        .text(d.properties.NAME);
         d3.select("#tooltip").classed("hidden", false);
       })
-      .on("mouseout", function() {
+      .on("mouseleave", function() {
         d3.select("#tooltip").classed("hidden", true);
       })
       .on("click", d => {
         province = d.properties.NAME;
         console.log(d.properties.NAME);
-        console.log(" type", province);
         createVisualization(provinceData());
       })
       .exit().remove();
   });
+};
 
-  function yearData() {
-    for (year_idx in json.children) {
-      if (json.children[year_idx].name == year) {
-        return json.children[year_idx];
-      }
+function yearData() {
+  for (year_idx in json.children) {
+    if (json.children[year_idx].name == year) {
+      return json.children[year_idx];
     }
-  };
-
-  var margin = {
-      top: 1,
-      left: 1,
-      bottom: 0,
-      right: 1
-    },
-    width1 = 1000,
-    width1 = width1 - margin.left - margin.right,
-    mapRatio = 1,
-    height1 = width1 * mapRatio,
-    mapRatioAdjuster = .15;
-  center = [5, 20];
-
-  // var margin1 = {
-  //     top: 10,
-  //     left: 10,
-  //     bottom: 10,
-  //     right: 10
-  //   },
-  //   width1 = parseInt(d3.select('#viz').style('width')),
-  //   width1 = width1 - margin.left - margin.right,
-  //   mapRatio = .5,
-  //   height1 = width1 * mapRatio,
-  //   mapRatioAdjuster = .15;
-  // center = [5, 20];
-
-  //Define map projection
-  var projection = d3.geoAzimuthalEqualArea()
-    .rotate([100, -45])
-    .center(center)
-    .translate([width1 / 2, height1 / 2])
-    .scale(width1 * [mapRatio + mapRatioAdjuster]);
-
-  var path = d3.geoPath().projection(projection);
-
-  var svg = d3.select("#viz")
-    .append("svg")
-    .attr("width", width1)
-    .attr("height", height1);
-
-  var features = d3.select("#viz")
-    .append("svg")
-    .attr("width", width1)
-    .attr("height", height1)
-    .append("g");
-
+  }
 };
 
 function provinceData() {
@@ -208,19 +152,18 @@ function provinceData() {
 };
 
 function sliderChanged(value) {
-
   document.querySelector('#yearSlider').value = value;
   year = document.querySelector('#yearSlider').value;
   createVisualization(provinceData());
 }
 
 // Main function to draw and set up the visualization, once we have the data.
-function createVisualization(json) {
+function createVisualization(jsonData) {
 
   d3.selectAll('svg > g > *').remove();
+
   // Basic setup of page elements.
   initializeBreadcrumbTrail();
-
 
   // Bounding circle underneath the sunburst, to make it easier to detect
   // when the mouse leaves the parent g.
@@ -229,7 +172,7 @@ function createVisualization(json) {
     .style("opacity", 0);
 
   // Turn the data into a d3 hierarchy and calculate the sums.
-  var root = d3.hierarchy(json)
+  var root = d3.hierarchy(jsonData)
     .sum(d => {
       return d.size;
     })
@@ -242,7 +185,7 @@ function createVisualization(json) {
     return (d.x1 - d.x0 > 0.005); // 0.005 radians = 0.29 degrees
   });
 
-  var path = vis.data([json]).selectAll("path")
+  var path = vis.data([jsonData]).selectAll("path")
     .data(nodes)
     .enter().append("svg:path")
     .attr("display", d => {
@@ -258,14 +201,12 @@ function createVisualization(json) {
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
-
   drawmap();
-
 };
 
 // Fade all but the current sequence, and show it in the breadcrumb trail.
 function mouseover(d) {
-  var value = d.value;
+  var value = Math.floor(d.value);
   var valueString = value + " kilotonnes";
 
   d3.select("#value").text(valueString);
@@ -377,8 +318,6 @@ function updateBreadcrumbs(nodeArray, valueString) {
   // Make the breadcrumb trail visible, if it's hidden.
   d3.select("#trail").style("visibility", "");
 }
-
-
 
 // Take a 2-column CSV and transform it into a hierarchical structure suitable
 // for a partition layout. The first column is a sequence of step names, from
