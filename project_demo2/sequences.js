@@ -144,25 +144,36 @@ function drawmap() {
   };
 
   var margin = {
-      top: 0,
-      left: 10,
-      bottom: 10,
-      right: 0
+      top: 1,
+      left: 1,
+      bottom: 0,
+      right: 1
     },
-    width1 = 500,
-    // width = width - margin.left - margin.right,
+    width1 = 1000,
+    width1 = width1 - margin.left - margin.right,
     mapRatio = 1,
     height1 = width1 * mapRatio,
-    mapRatioAdjuster = 0.5;
-  center = [10, 10];
+    mapRatioAdjuster = .15;
+  center = [5, 20];
 
-
+  // var margin1 = {
+  //     top: 10,
+  //     left: 10,
+  //     bottom: 10,
+  //     right: 10
+  //   },
+  //   width1 = parseInt(d3.select('#viz').style('width')),
+  //   width1 = width1 - margin.left - margin.right,
+  //   mapRatio = .5,
+  //   height1 = width1 * mapRatio,
+  //   mapRatioAdjuster = .15;
+  // center = [5, 20];
 
   //Define map projection
   var projection = d3.geoAzimuthalEqualArea()
     .rotate([100, -45])
     .center(center)
-    .translate([width1, height1 / 2])
+    .translate([width1 / 2, height1 / 2])
     .scale(width1 * [mapRatio + mapRatioAdjuster]);
 
   var path = d3.geoPath().projection(projection);
@@ -247,8 +258,8 @@ function createVisualization(json) {
 
   // Add the mouseleave handler to the bounding circle.
   d3.select("#container").on("mouseleave", mouseleave);
-  drawmap();
 
+  drawmap();
 
 };
 
