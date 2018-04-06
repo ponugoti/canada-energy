@@ -31,7 +31,7 @@ var totalSize = 0,
   province = null;
 
 function replaceText(){
-  document.getElementById("headingId").innerHTML = ("Canadian Energry Consumption: Region : "+ province + " Year : "+ year);
+  document.getElementById("headingId").innerHTML = ("Canadian Energy Trends in "+ province + " in "+ year);
   document.getElementById("headingId").style.fontSize = "xx-large";
 };
 
@@ -64,7 +64,6 @@ d3.text("visit-sequences.csv", function(text) {
   var csv = d3.csvParseRows(text);
   json = buildHierarchy(csv);
   province = "Canada";
-  replaceText();
   createVisualization(provinceData());
 });
 
@@ -128,7 +127,6 @@ function drawmap() {
       .on("click", d => {
         province = d.properties.NAME;
         console.log(d.properties.NAME);
-        replaceText();
         createVisualization(provinceData());
       })
       .exit().remove();
@@ -163,12 +161,13 @@ function sliderChanged(value) {
   document.querySelector('#yearSlider').value = value;
   year = document.querySelector('#yearSlider').value;
   createVisualization(provinceData());
-  replaceText();
 
 }
 
 // Main function to draw and set up the visualization, once we have the data.
 function createVisualization(jsonData) {
+
+  replaceText();
 
   d3.selectAll('svg > g > *').remove();
 
