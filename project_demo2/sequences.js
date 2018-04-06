@@ -1,11 +1,11 @@
 // Dimensions of sunburst.
-var width = 1000;
-var height = 1000;
+var width = 700;
+var height = 700;
 var radius = Math.min(width, height) / 2.25;
 
 // Breadcrumb dimensions: width, height, spacing, width of tip/tail.
 var b = {
-  w: 300,
+  w: 250,
   h: 50,
   s: 2,
   t: 10
@@ -29,6 +29,12 @@ var totalSize = 0,
   json = null,
   year = 1995,
   province = null;
+
+function replaceText(){
+  document.getElementById("headingId").innerHTML = ("Canadian Energry Consumption: Region : "+ province + " Year : "+ year);
+  document.getElementById("headingId").style.fontSize = "xx-large";
+};
+
 
 var vis = d3.select("#chart").append("svg:svg")
   .attr("width", width)
@@ -58,6 +64,7 @@ d3.text("visit-sequences.csv", function(text) {
   var csv = d3.csvParseRows(text);
   json = buildHierarchy(csv);
   province = "Canada";
+  replaceText();
   createVisualization(provinceData());
 });
 
@@ -67,7 +74,7 @@ var margin = {
     bottom: 0,
     right: 1
   },
-  width1 = 1000,
+  width1 = 350,
   width1 = width1 - margin.left - margin.right,
   mapRatio = 1,
   height1 = width1 * mapRatio,
@@ -121,6 +128,7 @@ function drawmap() {
       .on("click", d => {
         province = d.properties.NAME;
         console.log(d.properties.NAME);
+        replaceText();
         createVisualization(provinceData());
       })
       .exit().remove();
@@ -155,6 +163,8 @@ function sliderChanged(value) {
   document.querySelector('#yearSlider').value = value;
   year = document.querySelector('#yearSlider').value;
   createVisualization(provinceData());
+  replaceText();
+
 }
 
 // Main function to draw and set up the visualization, once we have the data.
