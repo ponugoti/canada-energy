@@ -3,8 +3,8 @@ body {
   font-size: 12px;
   font-weight: 400;
   background-color: #fff;
-  width: 960px;
-  height: 700px;
+  width: 1000px;
+  height: 1000px;
   margin-top: 10px;
 }
 
@@ -38,7 +38,14 @@ body {
 #sequence {
   width: 600px;
   height: 70px;
+  /*float: left;*/
 }
+
+/*#viz{
+  float: right;
+  position: left;
+  left: 30px;
+}*/
 
 #legend {
   padding: 10px 0 0 3px;
