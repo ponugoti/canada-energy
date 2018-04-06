@@ -31,7 +31,7 @@ var totalSize = 0,
   province = null;
 
 function replaceText(){
-  document.getElementById("headingId").innerHTML = ("Canadian Energy Trends in "+ province + " in "+ year);
+  document.getElementById("headingId").innerHTML = ("Energy Supply and Consumption Trends in "+ province + " in "+ year);
   document.getElementById("headingId").style.fontSize = "xx-large";
 };
 
