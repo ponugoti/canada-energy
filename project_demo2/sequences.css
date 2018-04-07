@@ -46,9 +46,9 @@ body {
 }
 
 #viz{
-  width: 33%
+  /*width: 33%;*/
   display: inline-block;
-  float: left;
+  /*float: left;*/
 
 }
 
@@ -63,8 +63,8 @@ body {
 
 #chart {
   position: relative;
-  width: 33%
-  float: right;
+  /*width: 33%;*/
+  /*float: right;*/
   display: inline-block;
 }
 
